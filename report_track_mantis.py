@@ -1,8 +1,15 @@
 
+import requests
 import json
 
-# Simulated MantisBT issue storage
-issues = {}
+# Configuration
+MANTIS_URL = "https://your-mantis-url.com/api/rest"
+API_TOKEN = "your_api_token"
+
+headers = {
+    "Authorization": API_TOKEN,
+    "Content-Type": "application/json"
+}
 
 # Create a new issue
 create_payload = {
@@ -12,28 +19,50 @@ create_payload = {
     "category": {"name": "General"}
 }
 
-# Simulate issue creation
-issue_id = 101
+# MOCK MODE: No real server credentials available
+MOCK_MODE = True
 
-issues[issue_id] = {
-    "id": issue_id,
-    "summary": create_payload["summary"],
-    "description": create_payload["description"],
-    "status": {"name": "new"},
-    "project": create_payload["project"]
-}
+if MOCK_MODE:
 
-print("Bug Created:", json.dumps({
-    "issue": {"id": issue_id}
-}))
+    # Simulate POST response
+    create_response = {
+        "issue": {"id": 101}
+    }
 
-# Track the issue
-tracked_issue = issues.get(issue_id)
+    print("Bug Created:", json.dumps(create_response))
 
-if tracked_issue:
-    print("\nBug Details:")
-    print(json.dumps({
-        "issue": tracked_issue
-    }, indent=4))
+    # Track the issue
+    issue_id = create_response["issue"]["id"]
+
+    # Simulate GET response
+    track_response = {
+        "issue": {
+            "id": issue_id,
+            "summary": "Bug via API",
+            "status": {"name": "new"},
+            "project": {"name": "TestProject"}
+        }
+    }
+
+    print("Bug Details:", json.dumps(track_response, indent=2))
+
 else:
-    print("Issue not found")
+
+    # Actual API request to create issue
+    create_response = requests.post(
+        f"{MANTIS_URL}/issues/",
+        headers=headers,
+        json=create_payload
+    )
+
+    print("Bug Created:", create_response.json())
+
+    # Track the issue
+    issue_id = create_response.json()["issue"]["id"]
+
+    track_response = requests.get(
+        f"{MANTIS_URL}/issues/{issue_id}",
+        headers=headers
+    )
+
+    print("Bug Details:", track_response.json())
